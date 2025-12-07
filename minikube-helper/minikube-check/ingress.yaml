@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  name: nginx-test-ingress
+  namespace: minikube-test
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: mylocal.io
+    http:
+      paths:
+      - backend:
+          service:
+            name: nginx-test-svc
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+status:
+  loadBalancer: {}

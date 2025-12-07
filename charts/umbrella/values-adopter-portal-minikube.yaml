@@ -1,0 +1,948 @@
+###############################################################
+# Tractus-X Portal - Minikube Configuration
+# Optimized for well-resourced minikube cluster
+# Resource limits removed, databases configured for higher capacity
+###############################################################
+
+###############################################################
+# Component Enablement
+###############################################################
+portal:
+  enabled: true
+  # Portal Migrations Job Resources
+  portalmigrations:
+    resources:
+      requests:
+        cpu: 250m
+        memory: 1Gi
+      limits:
+        cpu: 500m
+        memory: 2Gi
+    job:
+      backoffLimit: 6
+  # Portal Maintenance Job Resources
+  portalmaintenance:
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+  # Provisioning Migrations Job Resources
+  provisioningmigrations:
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+    job:
+      backoffLimit: 6
+
+sharedidp:
+  enabled: true
+  keycloak:
+    resources:
+      requests:
+        cpu: 250m
+        memory: 800Mi
+      limits:
+        cpu: 500m
+        memory: 1500Mi
+  realmSeeding:
+    resources:
+      requests:
+        cpu: 250m
+        memory: 1Gi
+      limits:
+        cpu: 500m
+        memory: 2Gi
+    initContainer:
+      resources:
+        requests:
+          cpu: 250m
+          memory: 1Gi
+        limits:
+          cpu: 500m
+          memory: 2Gi
+    job:
+      backoffLimit: 6
+
+semantichub:
+  enabled: true
+  keycloak:
+    resources:
+      requests:
+        cpu: 250m
+        memory: 600Mi
+      limits:
+        cpu: 500m
+        memory: 1200Mi
+  realmSeeding:
+    resources:
+      requests:
+        cpu: 250m
+        memory: 1Gi
+      limits:
+        cpu: 500m
+        memory: 2Gi
+    initContainer:
+      resources:
+        requests:
+          cpu: 250m
+          memory: 1Gi
+        limits:
+          cpu: 500m
+          memory: 2Gi
+    job:
+      backoffLimit: 6
+
+pgadmin4:
+  enabled: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 250m
+      memory: 512Mi
+
+###############################################################
+# Portal base addresses
+###############################################################
+portalAddress: "http://portal.tx.test"
+portalBackendAddress: "http://portal-backend.tx.test"
+
+# Catena-X Central Identity Provider (IAM) - Configuration
+centralidp:
+  enabled: true
+  address: "http://centralidp.tx.test"
+  realm: "CX-Central"
+  clients:
+    portal: "Cl2-CX-Portal"
+    registration: "Cl1-CX-Registration"
+    semantic: "Cl3-CX-Semantic"
+    miw: "Cl5-CX-Custodian"
+    bpdm: "Cl7-CX-BPDM"
+    technicalRolesManagement: "technical_roles_management"
+    issuerComponent: "Cl24-CX-SSI-CredentialIssuer"
+
+  # Keycloak pod - remove resource limits
+  keycloak:
+    resources:
+      requests:
+        cpu: 250m
+        memory: 800Mi
+      limits:
+        cpu: 500m
+        memory: 1500Mi
+
+  # Realm seeding job - remove resource limits and increase backoff
+  realmSeeding:
+    resources:
+      requests:
+        cpu: 250m
+        memory: 1Gi
+      limits:
+        cpu: 500m
+        memory: 2Gi
+    initContainer:
+      resources:
+        requests:
+          cpu: 250m
+          memory: 1Gi
+        limits:
+          cpu: 500m
+          memory: 2Gi
+    job:
+      backoffLimit: 6  # Increase retry attempts
+
+# Shared Identity Provider
+sharedidpAddress: "http://sharedidp.tx.test"
+
+# Semantics Hub
+semanticsAddress: "http://semantics.tx.test"
+
+# Business Partner Data Management (BPDM)
+bpdm:
+  enabled: true
+  poolAddress: "http://business-partners.tx.test"
+  poolApiPath: "/pool/v6"
+  portalGateAddress: "http://business-partners.tx.test"
+  portalGateApiPath: "/companies/test-company/v6"
+  # BPDM Job Resources
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      cpu: 500m
+      memory: 2Gi
+  job:
+    backoffLimit: 6
+
+# Custodian (Managed Identity Wallet)
+custodianAddress: "http://managed-identity-wallets.tx.test"
+
+# Self-Description Factory
+sdfactoryAddress: "http://sdfactory.tx.test"
+
+# Clearinghouse configuration
+clearinghouseConnectorAllowSdDocumentSkipErrorCode: "E2010"
+
+clearinghouse:
+  default:
+    countryAlpha2Code: "default"
+    scope: "openid"
+    grantType: "client_credentials"
+    baseAddress: "http://clearinghouse.tx.test"
+    apiPath: "/api/v2/validation"
+    clientId: "clearinghouse-client-id"
+    clientSecret: ""
+    tokenAddress: "http://centralidp.tx.test/realms/CX-Central/protocol/openid-connect/token"
+    clearinghouseConnectDisabled: true  # Set to false when clearinghouse is ready
+  regional: []
+
+# SSI Credential Issuer
+issuerComponentAddress: "http://ssi-credential-issuer.tx.test"
+
+# BPN DID Resolver
+bpnDidResolver:
+  managementApiAddress: "http://bpn-did-resolution-service-bdrs-server:8081"
+  directoryApiAddress: "http://bdrs-server.tx.test/api/directory"
+
+# DIM Wrapper Configuration
+dimWrapper:
+  baseAddress: "http://ssi-dim-wallet-stub.tx.test"
+  apiPath: "/api/dim"
+  tokenAddress: "http://centralidp.tx.test/realms/CX-Central/protocol/openid-connect/token"
+
+# Decentralized Identity Management
+decentralIdentityManagementAuthAddress: "http://ssi-dim-wallet-stub.tx.test/api/v2.0.0/iatp/catena-x-portal"
+
+# Operator company information
+operator:
+  bpn: "BPNL00000003CRHK"
+  name: "Catena-X"
+  shortname: "Catena-X"
+  city: "Munich"
+  region: "BY"
+  streetAdditional: ""
+  streetName: "Street"
+  streetNumber: "1"
+  zipCode: "80331"
+  country_alpha2code: "DE"
+
+###############################################################
+# Frontend Configuration
+###############################################################
+frontend:
+  ingress:
+    enabled: true
+    name: "frontend"
+    className: "nginx"
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: "/$1"
+      nginx.ingress.kubernetes.io/use-regex: "true"
+      nginx.ingress.kubernetes.io/enable-cors: "true"
+      nginx.ingress.kubernetes.io/cors-allow-origin: "http://*.tx.test"
+    hosts:
+      - host: "portal.tx.test"
+        paths:
+          - path: "/(.*)"
+            pathType: "Prefix"
+            backend:
+              service: "portal"
+              port: 8080
+          - path: "/registration/(.*)"
+            pathType: "Prefix"
+            backend:
+              service: "registration"
+              port: 8080
+          - path: "/((assets|documentation)/.*)"
+            pathType: "Prefix"
+            backend:
+              service: "assets"
+              port: 8080
+
+  portal:
+    name: "portal"
+    image:
+      name: "docker.io/tractusx/portal-frontend"
+      portaltag: v2.6.0
+      pullPolicy: "IfNotPresent"
+    requireHttpsUrlPattern: false
+
+  registration:
+    name: "registration"
+    image:
+      name: "docker.io/tractusx/portal-frontend-registration"
+      registrationtag: v2.2.2
+      pullPolicy: "IfNotPresent"
+
+  assets:
+    name: "assets"
+    image:
+      name: "docker.io/tractusx/portal-assets"
+      assetstag: v2.6.0
+      pullPolicy: "IfNotPresent"
+    path: "/assets"
+
+  centralidpAuthPath: "/auth"
+
+###############################################################
+# Backend Configuration
+###############################################################
+backend:
+  ingress:
+    enabled: true
+    name: "backend"
+    className: "nginx"
+    annotations:
+      nginx.ingress.kubernetes.io/use-regex: "true"
+      nginx.ingress.kubernetes.io/enable-cors: "true"
+      nginx.ingress.kubernetes.io/proxy-body-size: "8m"
+      nginx.ingress.kubernetes.io/cors-allow-origin: "http://*.tx.test"
+    hosts:
+      - host: "portal-backend.tx.test"
+        paths:
+          - path: "/api/registration"
+            pathType: "Prefix"
+            backend:
+              service: "registration-service"
+              port: 8080
+          - path: "/api/administration"
+            pathType: "Prefix"
+            backend:
+              service: "administration-service"
+              port: 8080
+          - path: "/api/notification"
+            pathType: "Prefix"
+            backend:
+              service: "notification-service"
+              port: 8080
+          - path: "/api/provisioning"
+            pathType: "Prefix"
+            backend:
+              service: "provisioning-service"
+              port: 8080
+          - path: "/api/apps"
+            pathType: "Prefix"
+            backend:
+              service: "marketplace-app-service"
+              port: 8080
+          - path: "/api/services"
+            pathType: "Prefix"
+            backend:
+              service: "services-service"
+              port: 8080
+
+  dotnetEnvironment: "Production"
+
+  dbConnection:
+    schema: "portal"
+    sslMode: "Disable"
+
+  # Portal paths
+  portalHomePath: "/home"
+  portalHelpPath: "/documentation"
+  portalPasswordResendPath: "/home/passwordResend"
+  portalIntroductionCompanyRolePath: "/companyroles"
+  portalIntroductionDataspacePath: "/dataspace"
+  userManagementPath: "/usermanagement"
+
+  # Enable DIM wallet (true) or use MIW (false)
+  useDimWallet: true
+
+  # Keycloak configuration
+  keycloak:
+    secret: "portal-backend-keycloak"
+    central:
+      clientId: "Cl2-CX-Portal"
+      clientSecret: ""  # Set via secret
+      jwtBearerOptions:
+        requireHttpsMetadata: "false"
+        metadataPath: "/auth/realms/CX-Central/.well-known/openid-configuration"
+        tokenValidationParameters:
+          validIssuerPath: "/auth/realms/CX-Central"
+          validAudiencePortal: "Cl2-CX-Portal"
+          validAudienceRegistration: "Cl1-CX-Registration"
+          clockSkew: "00:05:00"
+        refreshInterval: "00:00:30"
+      tokenPath: "/auth/realms/CX-Central/protocol/openid-connect/token"
+      useAuthTrail: true
+    shared:
+      clientId: "sa-cl1-reg-2"
+      clientSecret: ""  # Set via secret
+      authRealm: "master"
+      useAuthTrail: true
+
+  # Mailing configuration
+  mailing:
+    secret: "portal-backend-mailing"
+    host: "smtp.tx.test"
+    port: "587"
+    user: "portal@tx.test"
+    password: ""  # Set via secret
+    senderEmail: "portal@tx.test"
+
+  # External interfaces
+  interfaces:
+    secret: "portal-backend-interfaces"
+
+  # Health check endpoints
+  healthChecks:
+    startup:
+      path: "/health/startup"
+    liveness:
+      path: "/healthz"
+    readyness:
+      path: "/ready"
+
+  ###############################################################
+  # Registration Service
+  ###############################################################
+  registration:
+    name: "registration-service"
+    image:
+      name: "docker.io/tractusx/portal-registration-service"
+      registrationservicetag: v2.6.0
+      pullPolicy: "IfNotPresent"
+    basePath: "api/registration"
+    logging:
+      bpdmLibrary: "Information"
+      registrationService: "Information"
+      default: "Information"
+    healthChecks:
+      startup:
+        tags:
+          - name: "HEALTHCHECKS__0__TAGS__1"
+            value: "portaldb"
+    portalRegistrationPath: "/registration/"
+    keycloakClientId: "Cl1-CX-Registration"
+    applicationStatusIds:
+      status0: "SUBMITTED"
+      status1: "DECLINED"
+      status2: "CONFIRMED"
+    applicationDeclineStatusIds:
+      status0: "CREATED"
+      status1: "ADD_COMPANY_DATA"
+      status2: "INVITE_USER"
+      status3: "SELECT_COMPANY_ROLE"
+      status4: "UPLOAD_DOCUMENTS"
+      status5: "VERIFY"
+    documentTypeIds:
+      type0: "CX_FRAME_CONTRACT"
+      type1: "COMMERCIAL_REGISTER_EXTRACT"
+    swaggerEnabled: false
+    registrationDocumentTypeIds:
+      type0: "CX_FRAME_CONTRACT"
+    submitDocumentTypeIds:
+      type0: "COMMERCIAL_REGISTER_EXTRACT"
+
+  ###############################################################
+  # Administration Service
+  ###############################################################
+  administration:
+    name: "administration-service"
+    image:
+      name: "docker.io/tractusx/portal-administration-service"
+      administrationservicetag: v2.6.0
+      pullPolicy: "IfNotPresent"
+    basePath: "api/administration"
+    logging:
+      businessLogic: "Information"
+      sdfactoryLibrary: "Information"
+      bpdmLibrary: "Information"
+      custodianLibrary: "Information"
+      default: "Information"
+    healthChecks:
+      startup:
+        tags:
+          - name: "HEALTHCHECKS__0__TAGS__1"
+            value: "portaldb"
+          - name: "HEALTHCHECKS__0__TAGS__2"
+            value: "provisioningdb"
+    companyData:
+      useCaseParticipationMediaTypes:
+        type0: "PDF"
+      ssiCertificateMediaTypes:
+        type0: "PDF"
+      companyCertificateMediaTypes:
+        type0: "PDF"
+    issuerdid: "did:web:portal.tx.test:api:administration"
+    connectors:
+      validCertificationContentTypes:
+        type0: "application/x-pem-file"
+        type1: "application/x-x509-ca-cert"
+        type2: "application/pkix-cert"
+        type3: "application/octet-stream"
+      selfDescriptionDocumentPath: /api/administration/documents/selfDescription
+    identityProviderAdmin:
+      csvSettings:
+        fileName: "identityproviderlinks.csv"
+        contentType: "text/csv"
+        charset: "UTF-8"
+        separator: ","
+        headerUserId: "UserId"
+        headerFirstName: "FirstName"
+        headerLastName: "LastName"
+        headerEmail: "Email"
+        headerProviderAlias: "ProviderAlias"
+        headerProviderUserId: "ProviderUserId"
+        headerProviderUserName: "ProviderUserName"
+      deleteIdpRoles:
+        role0: "Company Admin"
+        role1: "IT Admin"
+      deactivateIdpRoles:
+        role0: "Company Admin"
+        role1: "IT Admin"
+    registration:
+      documentTypeIds:
+        type0: "COMMERCIAL_REGISTER_EXTRACT"
+    userManagement:
+      companyUserStatusIds:
+        status0: "ACTIVE"
+        status1: "INACTIVE"
+      userAdminRoles:
+        role0: "Company Admin"
+        role1: "IT Admin"
+    serviceAccount:
+      clientId: "technical_roles_management"
+      encryptionConfigIndex: 0
+      encryptionConfigs:
+        index0:
+          index: 0
+          cipherMode: "CBC"
+          paddingMode: "PKCS7"
+          encryptionKey: ""  # Set via secret - 256 bit hex
+      dimCreationRoles:
+        role0: "Identity Wallet Management"
+      userRolesAccessibleByProviderOnly:
+        role0: "BPDM Pool Consumer"
+        role1: "BPDM Sharing Output Consumer"
+        role2: "BPDM Sharing Input Manager"
+    swaggerEnabled: false
+    frameDocumentTypeIds:
+      type0: "CX_FRAME_CONTRACT"
+
+  ###############################################################
+  # Provisioning Configuration
+  ###############################################################
+  provisioning:
+    centralRealmId: "CX-Central"
+    invitedUserInitialRoles:
+      registration: "Company Admin"
+    serviceAccountClientPrefix: "sa"
+    centralIdentityProvider:
+      clientId: "central-idp"
+    sharedRealmClient:
+      clientId: "central-idp"
+    sharedRealm:
+      smtpServer:
+        host: "smtp.tx.test"
+        port: "587"
+        user: "portal@tx.test"
+        password: ""  # Set via secret
+        ssl: ""
+        startTls: "true"
+        auth: "true"
+        from: "portal@tx.test"
+        replyTo: "portal@tx.test"
+
+  ###############################################################
+  # App Marketplace Service
+  ###############################################################
+  appmarketplace:
+    name: "marketplace-app-service"
+    image:
+      name: "docker.io/tractusx/portal-marketplace-app-service"
+      appmarketplaceservicetag: v2.6.0
+      pullPolicy: "IfNotPresent"
+    basePath: "api/apps"
+    logging:
+      default: "Information"
+      offersLibrary: "Information"
+    healthChecks:
+      startup:
+        tags:
+          - name: "HEALTHCHECKS__0__TAGS__1"
+            value: "portaldb"
+    appOverviewPath: "/appoverview"
+    subscriptionPath: "/appsubscription"
+    detailPath: "/appdetail"
+    catenaAdminRoles:
+      role0: "CX Admin"
+    serviceAccountRoles:
+      role0: "App Tech User"
+    salesManagerRoles:
+      role0: "Sales Manager"
+    serviceManagerRoles:
+      role0: "App Manager"
+    subscriptionManagerRoles:
+      role0: "App Manager"
+      role1: "Sales Manager"
+    activeAppCompanyAdminRoles:
+      role0: "IT Admin"
+      role1: "Company Admin"
+    approveAppUserRoles:
+      role0: "Sales Manager"
+      role1: "App Manager"
+    activationUserRoles:
+      role0: "Sales Manager"
+      role1: "App Manager"
+    ITAdminRoles:
+      role0: "IT Admin"
+    uploadAppDocumentTypeIds:
+      documentTypeId0: "APP_TECHNICAL_INFORMATION"
+      mediaTypeIds0:
+        mediaTypeId0: "PDF"
+      documentTypeId1: "APP_LEADIMAGE"
+      mediaTypeIds1:
+        mediaTypeId0: "JPEG"
+        mediaTypeId1: "PNG"
+        mediaTypeId2: "SVG"
+      documentTypeId2: "APP_IMAGE"
+      mediaTypeIds2:
+        mediaTypeId0: "JPEG"
+        mediaTypeId1: "PNG"
+        mediaTypeId2: "SVG"
+      documentTypeId3: "APP_CONTRACT"
+      mediaTypeIds3:
+        mediaTypeId0: "PDF"
+      documentTypeId4: "ADDITIONAL_DETAILS"
+      mediaTypeIds4:
+        mediaTypeId0: "PDF"
+      documentTypeId5: "CONFORMITY_APPROVAL_BUSINESS_APPS"
+      mediaTypeIds5:
+        mediaTypeId0: "PDF"
+    swaggerEnabled: false
+    technicalUserProfileClient: "technical_roles_management"
+    companyAdminRoles:
+      role0: "Company Admin"
+
+  ###############################################################
+  # Notification Service
+  ###############################################################
+  notification:
+    name: "notification-service"
+    image:
+      name: "docker.io/tractusx/portal-notification-service"
+      notificationservicetag: v2.6.0
+      pullPolicy: "IfNotPresent"
+    basePath: "api/notification"
+    healthChecks:
+      startup:
+        tags:
+          - name: "HEALTHCHECKS__0__TAGS__1"
+            value: "portaldb"
+    swaggerEnabled: false
+    logging:
+      default: "Information"
+
+  ###############################################################
+  # Services Service
+  ###############################################################
+  services:
+    name: "services-service"
+    image:
+      name: "docker.io/tractusx/portal-services-service"
+      servicesservicetag: v2.6.0
+      pullPolicy: "IfNotPresent"
+    basePath: "api/services"
+    logging:
+      default: "Information"
+      offersLibrary: "Information"
+    healthChecks:
+      startup:
+        tags:
+          - name: "HEALTHCHECKS__0__TAGS__1"
+            value: "portaldb"
+    serviceOverviewPath: "/serviceoverview"
+    subscriptionPath: "/servicesubscription"
+    detailPath: "/servicedetail"
+    swaggerEnabled: false
+    technicalUserProfileClient: "technical_roles_management"
+    companyAdminRoles:
+      role0: "Company Admin"
+
+  ###############################################################
+  # Portal Migrations
+  ###############################################################
+  portalmigrations:
+    name: "portal-migrations"
+    image:
+      name: "docker.io/tractusx/portal-portal-migrations"
+      portalmigrationstag: v2.6.0
+      pullPolicy: "IfNotPresent"
+    seeding:
+      useInitial: true
+      seedTestData:
+        useDefault: true  # Set to true for test environment
+    logging:
+      default: "Information"
+
+  ###############################################################
+  # Portal Maintenance
+  ###############################################################
+  portalmaintenance:
+    name: "portal-maintenance"
+    image:
+      name: "docker.io/tractusx/portal-maintenance-service"
+      portalmaintenancetag: v2.6.0
+      pullPolicy: "IfNotPresent"
+    processIdentity:
+      processUserId: d21d2e8a-fe35-483c-b2b8-4100ed7f0953
+    batchProcessing:
+      deleteDocuments:
+        days: 80
+      retriggerClearinghouse:
+        days: 30
+    logging:
+      default: "Information"
+
+  ###############################################################
+  # Provisioning Migrations
+  ###############################################################
+  provisioningmigrations:
+    name: "provisioning-migrations"
+    image:
+      name: "docker.io/tractusx/portal-provisioning-migrations"
+      provisioningmigrationstag: v2.6.0
+      pullPolicy: "IfNotPresent"
+    logging:
+      default: "Information"
+
+  ###############################################################
+  # Processes Worker
+  ###############################################################
+  processesworker:
+    name: "processes-worker"
+    image:
+      name: "docker.io/tractusx/portal-processes-worker"
+      processesworkertag: v2.6.0
+      pullPolicy: "IfNotPresent"
+    logging:
+      default: "Information"
+      processesLibrary: "Information"
+      bpdmLibrary: "Information"
+      clearinghouseLibrary: "Information"
+      custodianLibrary: "Information"
+      sdfactoryLibrary: "Information"
+      offerProvider: "Information"
+    applicationActivation:
+      applicationApprovalInitialRoles:
+        portal:
+          role0: "Company Admin"
+        registration:
+          role0: "Company Admin"
+      clientToRemoveRolesOnActivation:
+        client0: "Cl1-CX-Registration"
+      welcomeNotificationTypeIds:
+        type0: "WELCOME"
+        type1: "WELCOME_USE_CASES"
+        type2: "WELCOME_SERVICE_PROVIDER"
+        type3: "WELCOME_CONNECTOR_REGISTRATION"
+        type4: "WELCOME_APP_MARKETPLACE"
+      loginTheme: "catenax-shared-portal"
+    bpdm:
+      scope: "openid"
+      grantType: "client_credentials"
+      clientId: "Cl7-CX-BPDM"
+      clientSecret: ""  # Set via secret
+      startSharingStateAsReady: true
+    custodian:
+      membershipErrorMessage: "Credential of type MembershipCredential is already exists"
+      scope: "openid"
+      grantType: "client_credentials"
+      clientId: "Cl5-CX-Custodian"
+      clientSecret: ""  # Set via secret
+    sdfactory:
+      selfdescriptionPath: "/api/tagus/selfdescription"
+      scope: "openid"
+      grantType: "client_credentials"
+      clientId: "sdfactory-client-id"
+      clientSecret: ""  # Set via secret
+    clearinghouse:
+      callbackPath: "/api/administration/registration/clearinghouse"
+    processes:
+      lockExpirySeconds: "300"
+    offerSubscriptionProcess:
+      serviceAccountRoles:
+        role0: "Digital Twin Management"
+      serviceManagerRoles:
+        role0: "App Manager"
+      itAdminRoles:
+        role0: "IT Admin"
+    offerprovider:
+      serviceManagerRoles:
+        role0: "App Manager"
+      scope: "openid"
+      grantType: "client_credentials"
+      clientId: "offerprovider-client-id"
+      clientSecret: ""  # Set via secret
+      encryptionConfigIndex: 0
+      encryptionConfigs:
+        index0:
+          index: 0
+          cipherMode: "CBC"
+          paddingMode: "PKCS7"
+          encryptionKey: ""  # Set via secret - 256 bit hex
+    processIdentity:
+      processUserId: d21d2e8a-fe35-483c-b2b8-4100ed7f0953
+    onboardingServiceProvider:
+      encryptionConfigIndex: 1
+      encryptionConfigs:
+        index0:
+          index: 0
+          cipherMode: "ECB"
+          paddingMode: "PKCS7"
+          encryptionKey: ""  # Set via secret - 256 bit hex
+        index1:
+          index: 1
+          cipherMode: "CBC"
+          paddingMode: "PKCS7"
+          encryptionKey: ""  # Set via secret - 256 bit hex
+    networkRegistration:
+      loginDocumentPath: "/documentation/?path=docs%2F09.+Others%28s%29%2F01.+Login.md"
+      externalRegistrationPath: "/consentOsp"
+      closeApplicationPath: "/decline"
+    dim:
+      clientId: "Cl24-CX-SSI-CredentialIssuer"
+      clientSecret: ""  # Set via secret
+      grantType: "client_credentials"
+      scope: "openid"
+      baseAddress: "http://ssi-dim-wallet-stub.tx.test"
+      universalResolverAddress: "http://resolver.tx.test/did"
+      didDocumentPath: "/api/administration/staticdata/did"
+      maxValidationTimeInDays: 7
+      encryptionConfigIndex: 0
+      encryptionConfigs:
+        index0:
+          index: 0
+          cipherMode: "CBC"
+          paddingMode: "PKCS7"
+          encryptionKey: ""  # Set via secret - 256 bit hex
+    issuerComponent:
+      clientId: "Cl24-CX-SSI-CredentialIssuer"
+      clientSecret: ""  # Set via secret
+      grantType: "client_credentials"
+      scope: "openid"
+    bpnDidResolver:
+      apiKey: ""  # Set via secret
+    invitation:
+      invitedUserInitialRoles:
+        role0: "Company Admin"
+      initialLoginTheme: "catenax-shared"
+      closeApplicationPath: "/decline"
+      encryptionConfigIndex: 0
+      encryptionConfigs:
+        index0:
+          index: 0
+          cipherMode: "CBC"
+          paddingMode: "PKCS7"
+          encryptionKey: ""  # Set via secret - 256 bit hex
+    mailing:
+      encryptionConfigIndex: 0
+      encryptionConfigs:
+        index0:
+          index: 0
+          cipherMode: "CBC"
+          paddingMode: "PKCS7"
+          encryptionKey: ""  # Set via secret - 256 bit hex
+
+###############################################################
+# PostgreSQL Configuration
+# High capacity settings for well-resourced minikube cluster
+###############################################################
+postgresql:
+  enabled: true
+  image:
+    registry: docker.io
+    repository: bitnami/postgresql
+    tag: "15-debian-12"
+  commonLabels:
+    app.kubernetes.io/version: "15"
+  auth:
+    database: "postgres"
+    port: 5432
+    existingSecret: "portal-postgres"
+    portalUser: "portal"
+    provisioningUser: "provisioning"
+  architecture: "standalone"  # Use standalone for minikube
+  audit:
+    pgAuditLog: "write, ddl"
+    logLinePrefix: "%m %u %d "
+  primary:
+    # High capacity PostgreSQL configuration
+    extendedConfiguration: |
+      max_connections = 500
+      shared_buffers = 1GB
+      effective_cache_size = 3GB
+      maintenance_work_mem = 256MB
+      checkpoint_completion_target = 0.9
+      wal_buffers = 16MB
+      default_statistics_target = 100
+      random_page_cost = 1.1
+      effective_io_concurrency = 200
+      work_mem = 10MB
+      min_wal_size = 1GB
+      max_wal_size = 4GB
+    initdb:
+      scriptsConfigMap: "portal-cm-postgres"
+    extraEnvVars:
+      - name: "PORTAL_PASSWORD"
+        valueFrom:
+          secretKeyRef:
+            name: "portal-postgres"
+            key: "portal-password"
+      - name: "PROVISIONING_PASSWORD"
+        valueFrom:
+          secretKeyRef:
+            name: "portal-postgres"
+            key: "provisioning-password"
+    persistence:
+      enabled: true
+      size: 20Gi  # Increased storage
+
+###############################################################
+# General Configuration
+###############################################################
+portContainer: 8080
+portService: 8080
+replicaCount: 1  # Single replica for minikube
+
+nodeSelector: {}
+tolerations: []
+
+# Simplified affinity for minikube
+affinity: {}
+
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+
+startupProbe:
+  failureThreshold: 30
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 1
+
+livenessProbe:
+  failureThreshold: 3
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 10
+
+readinessProbe:
+  failureThreshold: 3
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 1

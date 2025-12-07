@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "standalone-edc.fullname" . }}-controlplane
+  labels:
+    app: standalone-edc-controlplane
+spec:
+  replicas: {{ .Values.controlplane.replicaCount }}
+  selector:
+    matchLabels:
+      app: standalone-edc-controlplane
+  template:
+    metadata:
+      labels:
+        app: standalone-edc-controlplane
+    spec:
+      containers:
+        - name: controlplane
+          image: "{{ .Values.image.controlplane.repository }}:{{ .Values.image.controlplane.tag }}"
+          imagePullPolicy: {{ .Values.image.controlplane.pullPolicy }}
+          ports:
+            - name: dsp
+              containerPort: {{ .Values.controlplane.service.port }}
+          env:
+            {{- range .Values.controlplane.env }}
+            - name: {{ .name }}
+              value: "{{ .value }}"
+            {{- end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "standalone-edc.fullname" . }}-controlplane
+spec:
+  type: {{ .Values.controlplane.service.type }}
+  selector:
+    app: standalone-edc-controlplane
+  ports:
+    - name: dsp
+      port: {{ .Values.controlplane.service.port }}
+      targetPort: {{ .Values.controlplane.service.port }}
+
+---
+{{- if .Values.controlplane.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "standalone-edc.fullname" . }}-controlplane
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: {{ .Values.controlplane.ingress.className }}
+  rules:
+    - host: {{ .Values.controlplane.ingress.host }}
+      http:
+        paths:
+          - path: /(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ include "standalone-edc.fullname" . }}-controlplane
+                port:
+                  number: {{ .Values.controlplane.service.port }}
+{{- end }}

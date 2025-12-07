@@ -1,0 +1,365 @@
+# #############################################################################
+# Tractus-X Umbrella - Values Configuration
+# Aligned with Portal deployment on minikube
+# Optimized for well-resourced minikube cluster
+# #############################################################################
+
+###############################################################################
+# Component Enablement
+###############################################################################
+
+# Use portal's existing centralidp and add new clients for umbrella components
+centralidp:
+  enabled: false  # Don't deploy new instance, use existing
+  # Instead, update your portal values.yaml to include these additional clients:
+  # clients:
+  #   dataprovider: "Cl8-CX-DataProvider"
+  #   dataconsumer1: "Cl9-CX-DataConsumer1"
+  #   dataconsumer2: "Cl10-CX-DataConsumer2"
+  # Then run: helm upgrade portal ./charts/portal -f values.yaml -n portal
+
+# Disable bdrs-server-memory (using identity-and-trust-bundle)
+bdrs-server-memory:
+  enabled: false
+
+###############################################################################
+# Data Consumer One
+###############################################################################
+dataconsumerOne:
+  enabled: true
+  
+  # Participant ID
+  participant:
+    id: "BPNL00000003CONSUMER1"
+  
+  # Disable vault and use Kubernetes secrets
+  vault:
+    enabled: true
+    secretNames:
+      transferProxyTokenSignerPrivateKey: ""
+      transferProxyTokenSignerPublicKey: ""
+      transferProxyTokenEncryptionAesKey: ""
+  
+  # IAM configuration aligned with portal
+  iatp:
+    trustedIssuers:
+      - "did:web:portal.tx.test:api:administration"
+    sts:
+      oauth:
+        token:
+          url: "http://centralidp.tx.test/auth/realms/CX-Central/protocol/openid-connect/token"
+        client:
+          id: "Cl9-CX-DataConsumer1"  # Matches centralidp client name
+          secretAlias: "client-secret"
+  
+  # Controlplane ingress
+  controlplane:
+    ingress:
+      enabled: true
+      className: "nginx"
+      annotations:
+        nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      hostname: "dataconsumer-1-controlplane.tx.test"
+      tls:
+        enabled: false
+    
+    endpoints:
+      management:
+        authKey: "password"
+    
+    resources: {}
+    
+    bdrs:
+      server:
+        url: "http://bdrs-server.tx.test"
+    
+    ssi:
+      miw:
+        url: "http://managed-identity-wallets.tx.test"
+        authorityId: "BPNL00000003CRHK"
+      oauth:
+        token:
+          url: "http://centralidp.tx.test/auth/realms/CX-Central/protocol/openid-connect/token"
+        client:
+          id: "Cl9-CX-DataConsumer1"  # Matches centralidp client name
+          secretAlias: "client-secret"
+  
+  # Dataplane ingress
+  dataplane:
+    ingress:
+      enabled: true
+      className: "nginx"
+      annotations:
+        nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      hostname: "dataconsumer-1-dataplane.tx.test"
+      tls:
+        enabled: false
+    
+    resources: {}
+  
+  # PostgreSQL
+  postgresql:
+    primary:
+      persistence:
+        enabled: true
+        size: 10Gi
+      extendedConfiguration: |
+        max_connections = 300
+        shared_buffers = 512MB
+      resources: {}
+
+###############################################################################
+# TX Data Provider
+###############################################################################
+tx-data-provider:
+  enabled: true
+  seedTestdata: true
+  
+  # Participant configuration
+  participant:
+    id: "BPNL00000003DATAPROV"
+  
+  # Disable vault and use Kubernetes secrets
+  vault:
+    enabled: true
+    secretNames:
+      transferProxyTokenSignerPrivateKey: ""
+      transferProxyTokenSignerPublicKey: ""
+      transferProxyTokenEncryptionAesKey: ""
+  
+  # IAM configuration aligned with portal
+  iatp:
+    trustedIssuers:
+      - "did:web:portal.tx.test:api:administration"
+    sts:
+      oauth:
+        token:
+          url: "http://centralidp.tx.test/auth/realms/CX-Central/protocol/openid-connect/token"
+        client:
+          id: "Cl8-CX-DataProvider"  # Matches centralidp client name
+          secretAlias: "client-secret"
+  
+  # EDC Controlplane
+  controlplane:
+    ingress:
+      enabled: true
+      className: "nginx"
+      annotations:
+        nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      hostname: "dataprovider-controlplane.tx.test"
+      tls:
+        enabled: false
+    
+    endpoints:
+      management:
+        authKey: "password"
+    
+    resources: {}
+    
+    bdrs:
+      server:
+        url: "http://bdrs-server.tx.test"
+    
+    ssi:
+      miw:
+        url: "http://managed-identity-wallets.tx.test"
+        authorityId: "BPNL00000003CRHK"
+      oauth:
+        token:
+          url: "http://centralidp.tx.test/auth/realms/CX-Central/protocol/openid-connect/token"
+        client:
+          id: "Cl8-CX-DataProvider"  # Matches centralidp client name
+          secretAlias: "client-secret"
+  
+  # EDC Dataplane
+  dataplane:
+    ingress:
+      enabled: true
+      className: "nginx"
+      annotations:
+        nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      hostname: "dataprovider-dataplane.tx.test"
+      tls:
+        enabled: false
+    
+    resources: {}
+  
+  # Digital Twin Registry
+  digital-twin-registry:
+    ingress:
+      enabled: true
+      className: "nginx"
+      annotations:
+        nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      hosts:
+        - host: "dataprovider-registry.tx.test"
+          paths:
+            - path: /
+              pathType: Prefix
+      tls: []
+    
+    registry:
+      host: "dataprovider-registry.tx.test"
+      authentication: false
+      
+      idm:
+        publicClientId: "Cl8-CX-DataProvider"  # Matches centralidp client name
+        issuerUri: "http://centralidp.tx.test/auth/realms/CX-Central"
+      
+      resources: {}
+    
+    postgresql:
+      primary:
+        persistence:
+          enabled: true
+          size: 8Gi
+        extendedConfiguration: |
+          max_connections = 200
+          shared_buffers = 256MB
+        resources: {}
+  
+  # Submodel Server
+  simple-data-backend:
+    ingress:
+      enabled: true
+      className: "nginx"
+      annotations:
+        nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      hosts:
+        - host: "dataprovider-submodelserver.tx.test"
+          paths:
+            - path: /
+              pathType: Prefix
+      tls: []
+    
+    backend:
+      hostname: "dataprovider-submodelserver.tx.test"
+      resources: {}
+    
+    postgresql:
+      primary:
+        persistence:
+          enabled: true
+          size: 8Gi
+        extendedConfiguration: |
+          max_connections = 200
+          shared_buffers = 256MB
+        resources: {}
+  
+  # PostgreSQL for connector
+  postgresql:
+    primary:
+      persistence:
+        enabled: true
+        size: 10Gi
+      extendedConfiguration: |
+        max_connections = 300
+        shared_buffers = 512MB
+      resources: {}
+
+###############################################################################
+# Data Consumer Two
+###############################################################################
+dataconsumerTwo:
+  enabled: false
+
+###############################################################################################
+# pgAdmin4 (disabled - using portal's existing pgAdmin4)
+###############################################################################
+pgadmin4:
+  enabled: false
+  # Access the shared pgAdmin4 at: http://pgadmin4.tx.test
+  # All databases (portal + umbrella) are in the same namespace
+  # Connect using simple service names:
+  # - tx-data-provider-postgresql (EDC connector DB)
+  # - tx-data-provider-dtr-postgresql (Digital Twin Registry DB)
+  # - tx-data-provider-submodel-postgresql (Submodel Server DB)
+  # - portal-postgresql (Portal DBs)
+
+###############################################################################
+# SSI Credential Issuer
+###############################################################################
+ssi-credential-issuer:
+  enabled: false
+
+###############################################################################
+# Identity and Trust Bundle
+###############################################################################
+identity-and-trust-bundle:
+  enabled: true
+  
+  # BPN DID Resolution Service
+  bdrs-server:
+    enabled: true
+    
+    ingress:
+      enabled: true
+      className: "nginx"
+      annotations:
+        nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      hosts:
+        - host: bdrs-server.tx.test
+          paths:
+            - path: /
+              pathType: Prefix
+      tls: []
+    
+    resources: {}
+  
+  # SSI DIM Wallet Stub
+  ssi-dim-wallet-stub:
+    enabled: true
+    
+    ingress:
+      enabled: true
+      className: "nginx"
+      annotations:
+        nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      hosts:
+        - host: ssi-dim-wallet-stub.tx.test
+          paths:
+            - path: /
+              pathType: Prefix
+      tls: []
+    
+    wallet:
+      baseWalletBPN: "BPNL00000003CRHK"
+      membershipOrganisation: "Catena-X"
+    
+    resources: {}
+
+###############################################################################
+# Global Configuration
+# All services deployed in the same 'portal' namespace
+# Services communicate directly via service names (no namespace suffix needed)
+###############################################################################
+global:
+  # Portal endpoints (same namespace)
+  # Services can access directly via service name
+  centralidp:
+    address: "http://centralidp.tx.test"
+    realm: "CX-Central"
+  
+  sharedidp:
+    address: "http://sharedidp.tx.test"
+  
+  portal:
+    address: "http://portal.tx.test"
+    backend: "http://portal-backend.tx.test"
+  
+  # Managed Identity Wallet (same namespace)
+  miw:
+    url: "http://managed-identity-wallets.tx.test"
+
+###############################################################################
+# Resource Configuration for Jobs
+###############################################################
+jobs:
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      cpu: 500m
+      memory: 2Gi
+  backoffLimit: 6

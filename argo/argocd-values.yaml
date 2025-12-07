@@ -1,0 +1,22 @@
+global:
+  # This becomes the hostname in the ingress rule
+  domain: argo.tx.test
+
+configs:
+  params:
+    # Run argocd-server without TLS, so ingress can talk HTTP → much simpler for minikube
+    server.insecure: true
+
+server:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      kubernetes.io/ingress.class: nginx
+
+    # for chart 9.x, the host comes from global.domain, so we don't set "hostname" here
+
+  # Just to be explicit, use ClusterIP and normal HTTP port
+  service:
+    type: ClusterIP
+

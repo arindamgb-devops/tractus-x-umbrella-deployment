@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx-test
+  name: nginx-test
+  namespace: minikube-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-test
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: nginx-test
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        resources: {}
+status: {}

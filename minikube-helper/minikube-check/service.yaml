@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx-test
+  name: nginx-test-svc
+  namespace: minikube-test
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+      #nodePort: 30002
+  selector:
+    app: nginx-test
+      #type: NodePort

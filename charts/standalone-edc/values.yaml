@@ -1,0 +1,119 @@
+image:
+  controlplane:
+    repository: arindamgb/edc-controlplane
+    tag: 0.15.0
+    pullPolicy: Always
+  dataplane:
+    repository: arindamgb/edc-dataplane
+    tag: 0.15.0
+    pullPolicy: Always
+
+# Shared deployment values for external services the runtimes need
+vault:
+  enabled: false
+  # # set to your Vault service address
+  # url: "http://umbrella-vault:8200"
+  # # token is better provided via k8s secret; placeholder here for quick tests
+  # token: "root"
+
+postgresql:
+  enabled: true
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/postgresql
+    tag: 16.2.0-debian-12-r10
+    pullPolicy: IfNotPresent
+  host: "postgresql"
+  port: 5432
+  database: "edc"
+  user: "edc"
+  password: "edcpassword"
+  jdbcUrl: "jdbc:postgresql://postgresql:5432/edc"
+
+controlplane:
+  enabled: true
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  service:
+    type: ClusterIP
+    port: 8084           # external DSP/API port (example)
+  # Hostnames compatible with your nginx ingress + *.tx.test pattern
+  ingress:
+    enabled: true
+    className: nginx
+    host: standalone-edc-controlplane.tx.test
+    tlsEnabled: false
+
+  # Environment / config for control-plane (you will copy from EDC launcher docs)
+  env:
+    # examples – you must align with the launcher you picked
+    - name: EDC_RUNTIME_ID
+      value: "standalone-controlplane"
+    - name: EDC_WEB_HTTP_PORT
+      value: "8084"
+    - name: EDC_WEB_HTTP_PATH
+      value: "/api"
+    - name: EDC_WEB_HTTP_CONTROL_PORT
+      value: "8081"
+    - name: EDC_WEB_HTTP_CONTROL_PATH
+      value: "/management"
+    # # Vault configuration (mapped to edc.vault.hashicorp.*)
+    # - name: EDC_VAULT_HASHICORP_URL
+    #   value: "http://umbrella-vault:8200"
+    # - name: EDC_VAULT_HASHICORP_TOKEN
+    #   value: "root"
+    # # Default datasource configuration (mapped to edc.datasource.default.*)
+    # - name: EDC_DATASOURCE_DEFAULT_URL
+    #   value: "jdbc:postgresql://postgresql:5432/edc"
+    # - name: EDC_DATASOURCE_DEFAULT_USER
+    #   value: "edc"
+    # - name: EDC_DATASOURCE_DEFAULT_PASSWORD
+    #   value: "edcpassword"
+    # # etc – copy the exact EDC envs from the launcher docs / sample
+
+dataplane:
+  enabled: true
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  service:
+    type: ClusterIP
+    port: 8085         # dataplane public port – example
+  ingress:
+    enabled: true
+    className: nginx
+    host: standalone-edc-dataplane.tx.test
+    tlsEnabled: false
+
+  env:
+    # again, align with EDC dataplane launcher docs
+    - name: EDC_RUNTIME_ID
+      value: "standalone-dataplane"
+    - name: EDC_WEB_HTTP_PORT
+      value: "8085"
+    - name: EDC_WEB_HTTP_PATH
+      value: "/api"
+    # # Vault configuration
+    # - name: EDC_VAULT_HASHICORP_URL
+    #   value: "http://umbrella-vault:8200"
+    # - name: EDC_VAULT_HASHICORP_TOKEN
+    #   value: "root"
+    # Default datasource configuration
+    - name: EDC_DATASOURCE_DEFAULT_URL
+      value: "jdbc:postgresql://postgresql:5432/edc"
+    - name: EDC_DATASOURCE_DEFAULT_USER
+      value: "edc"
+    - name: EDC_DATASOURCE_DEFAULT_PASSWORD
+      value: "edcpassword"
+    # etc…

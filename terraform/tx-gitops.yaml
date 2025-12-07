@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tractus-x-umbrella
+  namespace: argocd
+spec:
+  project: default
+
+
+  source:
+    repoURL: https://github.com/arindamgb-devops/tractus-x-umbrella.git
+    targetRevision: main
+    path: charts/umbrella
+    helm:
+      valueFiles:
+        - development-values.yaml
+
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tractus-x
+
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

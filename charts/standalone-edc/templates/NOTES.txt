@@ -1,0 +1,14 @@
+{{- /*
+Simple NOTES for standalone EDC deployment
+*/ -}}
+
+Standalone EDC has been installed.
+
+Namespace: {{ .Release.Namespace }}
+Release:   {{ .Release.Name }}
+
+Controlplane service:
+  {{ include "standalone-edc.fullname" . }}-controlplane
+
+Dataplane service:
+  {{ include "standalone-edc.fullname" . }}-dataplane

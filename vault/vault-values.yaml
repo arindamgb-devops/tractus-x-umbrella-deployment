@@ -1,0 +1,26 @@
+server:
+  dev:
+    enabled: true
+    devRootToken: root
+
+injector:
+  enabled: false
+
+ui:
+  enabled: true
+  serviceType: ClusterIP
+
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+
+    # Vault chart BUG: annotations OR labels must be non-empty
+    annotations:
+      kubernetes.io/ingress.class: nginx
+
+    hosts:
+      - host: vault.tx.test
+        paths:
+          - path: /
+            pathType: Prefix
+
